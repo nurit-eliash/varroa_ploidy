@@ -1,0 +1,91 @@
+---
+title: "varroa ploidy"
+output:
+  html_document:
+    code_folding: hide
+    theme: cerulean
+    toc: yes
+    toc_depth: 5
+    toc_float:
+      collapsed: yes
+      df_print: paged
+editor_options: 
+  chunk_output_type: console
+---
+
+```{=html}
+<style type="text/css">
+  body{
+  font-size: 12pt;
+}
+</style>
+```
+
+## load libraries
+```{r libraries, echo=TRUE, message=FALSE, warning=FALSE}
+library("tidyverse")
+library("plyr")
+library("dplyr")
+library("ggplot2")
+library("RColorBrewer")
+#library("scales")
+#library("ggpubr")
+#library("gridExtra")
+#library("grid")
+#library("GGally")
+library("data.table")
+library("stringr")
+library("janitor")
+library("knitr")
+library("kableExtra")
+library("plotly") # for the 3d plots
+
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+                 #    fig.width = 20,
+                  #    fig.asp = 0.6,
+                   #   out.width = "100%")
+```
+
+
+```{r}
+data <- read.csv("/Users/nuriteliash/Documents/GitHub/varroa_ploidy/data/ploidy.csv") %>%
+  dplyr::mutate(Family = as.character(Family))
+
+# order the levels 
+data$body.part <- factor(data$body.part, level=c("Body", "Anterior", "Posterior", "Legs","Hemolymph","Ovary","Testes"))
+
+data$Stage <- factor(data$Stage, level=c("Larvae", "Protonymph", "Deuteronymph", "adult"))
+
+p_fem = data %>% dplyr::filter(Sex == "fem") %>%
+  dplyr::filter(body.part == c("Body", "Legs","Ovary","Testes")) %>%
+  ggplot(aes(y=ploidy, x=body.part, fill = Sex)) + 
+ geom_boxplot() +  theme_classic() +  geom_jitter(width=0.1, size=2) +
+  facet_wrap(~Stage, nrow = 1) +  ggtitle('Female mite ploidy') +
+  ylim(0, 3)
+
+p_male = data %>% dplyr::filter(Sex == "male") %>%
+  dplyr::filter(body.part == c("Body", "Legs","Ovary","Testes")) %>%
+  ggplot(aes(y=ploidy, x=body.part, fill = Sex)) + 
+ geom_boxplot(fill = "#00AFBB") +  theme_classic() +  geom_jitter(width=0.1, size=2,color = "#00AFBB",fill = "#00AFBB") +
+  facet_wrap(~Stage, nrow = 1) +  ggtitle('Male mite ploidy') +
+  ylim(0, 3)
+
+p_adult = data %>% dplyr::filter(Stage == "adult") %>%
+  ggplot(aes(y=ploidy, x=body.part, fill = Sex, lable = Stage)) + 
+ geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_classic() +  geom_jitter(width=0.1, size=2) +
+  facet_wrap(~Sex)   + ggtitle('Adult mite ploidy') 
+
+p_family = data %>% dplyr::filter(body.part == c("Body", "Ovary","Testes")) %>%
+    mutate_at("Family", ~replace_na(.,"0")) %>%
+  ggplot(aes(y=ploidy, x=Family, fill = Sex, lable = Stage)) + 
+ geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_classic() +  geom_jitter(width=0.1, size=2) +
+  facet_wrap(~body.part, ncol = 1 )   + ggtitle('Adult mite ploidy per family') 
+
+
+ggplotly(p_fem)
+ggplotly(p_male)
+
+ggplotly(p_adult)
+ggplotly(p_family)
+
+```
