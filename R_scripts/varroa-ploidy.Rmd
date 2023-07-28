@@ -21,7 +21,7 @@ editor_options:
 </style>
 ```
 
-## load libraries
+load libraries
 ```{r libraries, echo=TRUE, message=FALSE, warning=FALSE}
 library("tidyverse")
 library("plyr")
@@ -38,7 +38,7 @@ library("stringr")
 library("janitor")
 library("knitr")
 library("kableExtra")
-library("plotly") # for the 3d plots
+library("plotly") 
 
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
                  #    fig.width = 20,
@@ -47,7 +47,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
 
-```{r}
+```{r, warning=FALSE}
 data <- read.csv("/Users/nuriteliash/Documents/GitHub/varroa_ploidy/data/ploidy.csv") %>%
   dplyr::mutate(Family = as.character(Family))
 
@@ -56,36 +56,111 @@ data$body.part <- factor(data$body.part, level=c("Body", "Anterior", "Posterior"
 
 data$Stage <- factor(data$Stage, level=c("Larvae", "Protonymph", "Deuteronymph", "adult"))
 
+data$Stage_original <- factor(data$Stage_original, level=c("Mom", "Son", "Mature","Daughter", "Deuteronymph", "Protonymph", "Larvae", "Immature"))
+
 p_fem = data %>% dplyr::filter(Sex == "fem") %>%
-  dplyr::filter(body.part == c("Body", "Legs","Ovary","Testes")) %>%
+  dplyr::filter(body.part %in% c("Body", "Legs","Ovary","Testes")) %>%
   ggplot(aes(y=ploidy, x=body.part, fill = Sex)) + 
- geom_boxplot() +  theme_classic() +  geom_jitter(width=0.1, size=2) +
+ geom_boxplot() +  theme_bw() +  geom_jitter(width=0.1, size=2) +
   facet_wrap(~Stage, nrow = 1) +  ggtitle('Female mite ploidy') +
   ylim(0, 3)
 
 p_male = data %>% dplyr::filter(Sex == "male") %>%
-  dplyr::filter(body.part == c("Body", "Legs","Ovary","Testes")) %>%
+  dplyr::filter(body.part %in% c("Body", "Legs","Ovary","Testes")) %>%
   ggplot(aes(y=ploidy, x=body.part, fill = Sex)) + 
- geom_boxplot(fill = "#00AFBB") +  theme_classic() +  geom_jitter(width=0.1, size=2,color = "#00AFBB",fill = "#00AFBB") +
+ geom_boxplot(fill = "#00AFBB") +  theme_bw() +  geom_jitter(width=0.1, size=2,color = "#00AFBB",fill = "#00AFBB") +
   facet_wrap(~Stage, nrow = 1) +  ggtitle('Male mite ploidy') +
   ylim(0, 3)
 
 p_adult = data %>% dplyr::filter(Stage == "adult") %>%
   ggplot(aes(y=ploidy, x=body.part, fill = Sex, lable = Stage)) + 
- geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_classic() +  geom_jitter(width=0.1, size=2) +
-  facet_wrap(~Sex)   + ggtitle('Adult mite ploidy') 
+ geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_bw() +  geom_jitter(width=0.1, size=2) +
+  facet_wrap(~Sex) + ggtitle('Adult mite ploidy') +  ylim(0, 3)
 
-p_family = data %>% dplyr::filter(body.part == c("Body", "Ovary","Testes")) %>%
+
+p_1 = data %>% dplyr::filter(Stage == "adult") %>%
+  ggplot(aes(y=ploidy, x=body.part, fill = Sex, lable = Stage)) + 
+ geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_bw() +  geom_jitter(width=0.1, size=2) + 
+  ggtitle('Adult mite ploidy') +  ylim(0, 3)
+
+
+p_all_stages = data %>% dplyr::filter(Stage != "NA" ) %>%
+dplyr::filter(body.part %in% c("Body", "Legs", "Ovary","Testes")) %>%
+  ggplot(aes(y=ploidy, x=body.part, fill = Sex, lable = Stage)) + 
+ geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_bw() +  geom_jitter(width=0.1, size=2) + 
+   facet_wrap(~Stage, nrow = 1) + ggtitle('Mite ploidy, in different stages') +
+  theme(axis.text.x = element_text(angle = 45)) +  theme(legend.position='none')+  ylim(0, 3)
+
+
+p_family_allStages = data %>% dplyr::filter(body.part %in% c("Body", "Ovary","Testes")) %>%
     mutate_at("Family", ~replace_na(.,"0")) %>%
   ggplot(aes(y=ploidy, x=Family, fill = Sex, lable = Stage)) + 
- geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_classic() +  geom_jitter(width=0.1, size=2) +
-  facet_wrap(~body.part, ncol = 1 )   + ggtitle('Adult mite ploidy per family') 
+ geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_bw() +  geom_jitter(width=0.1, size=2) +
+  facet_wrap(~body.part+Stage ) + ggtitle('Mite ploidy per family') +  ylim(0, 3)
+
+p_fam_body = data %>% dplyr::filter(body.part == "Body") %>%
+ dplyr::filter(Stage %in% c("Larvae", "Protonymph", "Deuteronymph", "adult")) %>%
+  dplyr::filter(Family %in% c("1", "11","27","3","2","4", "5")) %>%
+  ggplot(aes(y=ploidy, x=Stage, fill = Sex, lable = Stage)) + 
+ geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_bw() +  geom_jitter(width=0.1, size=2) +
+  facet_wrap(~Family ) + ggtitle('Mite ploidy per family') +
+   theme(axis.text.x = element_text(angle = 45)) +  theme(legend.position='none')+  ylim(0, 3)
 
 
-ggplotly(p_fem)
-ggplotly(p_male)
+p_fam_body_1_11_27_3 = data %>% dplyr::filter(body.part == "Body") %>%
+  dplyr::filter(Family %in% c("1", "11","27","3")) %>%
+  ggplot(aes(y=ploidy, x=Stage_original, fill = Sex, lable = Stage_original)) + 
+ geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_bw() +  geom_jitter(width=0.1, size=2) +
+  facet_wrap(~Family , nrow = 1) + ggtitle('Mite ploidy per family') +
+   theme(axis.text.x = element_text(angle = 45)) +  theme(legend.position='none')+  ylim(0, 3)
 
-ggplotly(p_adult)
-ggplotly(p_family)
 
+p_fam_body_2_4 = data %>% dplyr::filter(body.part == "Body") %>%
+  dplyr::filter(Family %in% c("2","4")) %>%
+  ggplot(aes(y=ploidy, x=Stage_original, fill = Sex, lable = Stage_original)) + 
+ geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_bw() +  geom_jitter(width=0.1, size=2) +
+  facet_wrap(~Family ) + ggtitle('Mite ploidy per family') +
+   theme(axis.text.x = element_text(angle = 45)) +  theme(legend.position='none')+  ylim(0, 3)
+
+
+p_fam_body_5 = data %>% dplyr::filter(body.part == "Body") %>%
+  dplyr::filter(Family == "5") %>%
+  ggplot(aes(y=ploidy, x=Stage_original, fill = Sex, lable = Stage_original)) + 
+ geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_bw() +  geom_jitter(width=0.1, size=2) +
+  facet_wrap(~Family ) + ggtitle('Mite ploidy per family') +
+   theme(axis.text.x = element_text(angle = 45)) +  theme(legend.position='none')+  ylim(0, 3)
+```
+
+-----
+
+```{r,  echo=FALSE, fig.asp = 0.5, fig.width = 7, out.width="100%",  fig.cap="all developmental stages, males and females, in different body parts"}
+
+#Mite ploidy, in different stages
+ggplotly(p_all_stages)
+```
+-----
+
+## Looking at specific families
+the ploidy of the male offspring varied, depends on the family 
+
+for some families ( 1, 11, 27 and 3) the females ploidy was higher then males.  
+while females looks diploid, males look haploid.  
+```{r, echo=FALSE,  fig.width = 7, fig.height = 3, out.width="100%"}
+#Mite ploidy per family
+ggplotly(p_fam_body_1_11_27_3)
+```
+-----
+
+for other families ( 2 and 4) the females ploidy was similar to that of the male offspring.  
+
+```{r, echo=FALSE,  fig.width = 6, fig.height = 3, out.width="60%"}
+ggplotly(p_fam_body_2_4)
+```
+-----
+
+in one family (number 5) the male offspring ploidy was mixed:   
+one males look diploid, and the other two look haploid. 
+```{r, echo=FALSE, fig.width = 3, fig.height = 3, out.width="40%"}
+#Mite ploidy per family
+ggplotly(p_fam_body_5)
 ```
