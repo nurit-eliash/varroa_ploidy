@@ -28,11 +28,6 @@ library("plyr")
 library("dplyr")
 library("ggplot2")
 library("RColorBrewer")
-#library("scales")
-#library("ggpubr")
-#library("gridExtra")
-#library("grid")
-#library("GGally")
 library("data.table")
 library("stringr")
 library("janitor")
@@ -49,7 +44,10 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 ```{r, warning=FALSE}
 data <- read.csv("/Users/nuriteliash/Documents/GitHub/varroa_ploidy/data/ploidy.csv") %>%
-  dplyr::mutate(Family = as.character(Family))
+  dplyr::mutate(Family = as.character(Family)) %>%
+  dplyr::mutate(stage_mature = case_when(
+    grepl("adult", Stage) ~ "Mature",
+    !grepl("adult", Stage) ~ "Imature"))
 
 # order the levels 
 data$body.part <- factor(data$body.part, level=c("Body", "Anterior", "Posterior", "Legs","Hemolymph","Ovary","Testes"))
@@ -57,6 +55,9 @@ data$body.part <- factor(data$body.part, level=c("Body", "Anterior", "Posterior"
 data$Stage <- factor(data$Stage, level=c("Larvae", "Protonymph", "Deuteronymph", "adult"))
 
 data$Stage_original <- factor(data$Stage_original, level=c("Mom", "Son", "Mature","Daughter", "Deuteronymph", "Protonymph", "Larvae", "Immature"))
+
+levels(data$Family) <- c(levels(data$Family), 0)
+data$Family <- factor(data$Family, level= c("0", "1", "11","27","3","2","4", "5"))
 
 p_fem = data %>% dplyr::filter(Sex == "fem") %>%
   dplyr::filter(body.part %in% c("Body", "Legs","Ovary","Testes")) %>%
@@ -98,14 +99,49 @@ p_family_allStages = data %>% dplyr::filter(body.part %in% c("Body", "Ovary","Te
  geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_bw() +  geom_jitter(width=0.1, size=2) +
   facet_wrap(~body.part+Stage ) + ggtitle('Mite ploidy per family') +  ylim(0, 3)
 
+p_family_adults = data %>% dplyr::filter(body.part %in% c("Body", "Ovary","Testes")) %>%
+   dplyr::filter(Stage == "adult") %>%
+   mutate_at("Family", ~replace_na(.,"0")) %>%
+  ggplot(aes(y=ploidy, x=Family, fill = Sex, lable = Stage)) + 
+ geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_bw() +  geom_jitter(width=0.1, size=2) +
+  facet_wrap(~body.part ) + ggtitle('Mite ploidy per family') +  ylim(0, 3)
+
 p_fam_body = data %>% dplyr::filter(body.part == "Body") %>%
  dplyr::filter(Stage %in% c("Larvae", "Protonymph", "Deuteronymph", "adult")) %>%
-  dplyr::filter(Family %in% c("1", "11","27","3","2","4", "5")) %>%
-  ggplot(aes(y=ploidy, x=Stage, fill = Sex, lable = Stage)) + 
+  ggplot(aes(y=ploidy, x=Sex, fill = Sex, lable = Stage)) + 
  geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_bw() +  geom_jitter(width=0.1, size=2) +
-  facet_wrap(~Family ) + ggtitle('Mite ploidy per family') +
-   theme(axis.text.x = element_text(angle = 45)) +  theme(legend.position='none')+  ylim(0, 3)
+facet_wrap(~Stage, nrow = 1 ) + 
+  ggtitle('Mite ploidy in whole body, in differnet developmental stage') +
+   theme(axis.text.x = element_text(angle = 45)) +  theme(legend.position='right')+  ylim(0, 3)
 
+#hist plot - ploidy frequency
+data %>% dplyr::filter(body.part == "Body") %>%
+ dplyr::filter(Stage %in% c("Larvae", "Protonymph", "Deuteronymph", "adult")) %>%
+ ggplot(aes(x=ploidy, color = Sex, fill = Sex)) + 
+  geom_histogram(position="dodge") +
+ facet_wrap(~Stage, nrow = 1 ) + 
+  geom_density(alpha=.2) +
+theme_classic2() +
+ggtitle("Ploidy count in whole body of mites of differnet stages") 
+
+data %>% dplyr::filter(body.part == "Body") %>%
+ ggplot(aes(x=ploidy, color = Sex, fill = Sex)) + 
+  geom_histogram(position="dodge") +
+   geom_density(alpha=.2) +
+theme_classic2() +
+ggtitle("Ploidy count in mites' whole body
+Flow-cytometry. n=57") +
+  facet_wrap(~stage_mature)
+
+p_allFam_body_adult = data %>% dplyr::filter(body.part == "Body") %>%
+ dplyr::filter(Stage =="adult") %>%
+ #   mutate_at("Family", ~replace_na(.,"0")) %>%
+  na.omit() %>%
+  ggplot(aes(y=ploidy, x=Family, fill = Sex, lable = Stage)) + 
+ geom_boxplot(outlier.shape = NA, coef=0 ) +  theme_bw() +  geom_jitter(width=0.1, size=2) +
+#facet_wrap(~Stage ) + 
+  ggtitle('Mite ploidy in whole body, per family') +
+   theme(axis.text.x = element_text(angle = 45)) +  theme(legend.position='right')+  ylim(0, 3)
 
 p_fam_body_1_11_27_3 = data %>% dplyr::filter(body.part == "Body") %>%
   dplyr::filter(Family %in% c("1", "11","27","3")) %>%
@@ -136,7 +172,7 @@ p_fam_body_5 = data %>% dplyr::filter(body.part == "Body") %>%
 ```{r,  echo=FALSE, fig.asp = 0.5, fig.width = 7, out.width="100%",  fig.cap="all developmental stages, males and females, in different body parts"}
 
 #Mite ploidy, in different stages
-ggplotly(p_all_stages)
+ggplotly(p_fam_body)
 ```
 -----
 
