@@ -56,7 +56,7 @@
 38,25_fem_F1_adult_Ovary,25,Female,F1,adult,Ovary,2.49,Mom
 66,25_male_F2_Larvae_Legs,25,Male,F2,Larvae,Legs,1.11,Larvae
 39,26_fem_F1_adult_Ovary,26,Female,F1,adult,Ovary,2.82,Mom
-61,26_male_F1_adult_Body,26,Male,F1,adult,Body,1.15,Mom
+61,26_male_F1_adult_Body,26,Female,F1,adult,Body,1.15,Mom
 21,27_fem_F2_Larvae_Body,27,Female,F2,Larvae,Body,2.14,Larvae
 22,27_fem_F2_Larvae_Body,27,Female,F2,Larvae,Body,2.25,Larvae
 40,27_fem_F2_Larvae_Ovary,27,Female,F2,Larvae,Ovary,2.11,Larvae
